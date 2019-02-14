@@ -1,7 +1,7 @@
 # GitLab CI Jobs Exporter
 This tool allows for exporting build job metrics from GitLab CI.
 It is used to monitor the experience as a user of the CI infrastructure.
-More information at https://xinau.github.io/notes/prometheus-gitlab-job-exporter/
+More information at https://blog.xinau.ch/notes/prometheus-gitlab-job-exporter/
 
 ## Installation
 ```
