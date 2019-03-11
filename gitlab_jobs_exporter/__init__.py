@@ -47,24 +47,24 @@ class GitLabJobsCollector:
         for scope in self.scopes:
             self._prometheus_metrics[scope] = {
                 "id":
-                    GaugeMetricFamily("gitlab_job_id",
-                                      "GitLab job id",
+                    GaugeMetricFamily("gitlab_job_latest_id",
+                                      "latest GitLab job id",
                                       labels=["project", "scope"]),
                 "duration":
-                    GaugeMetricFamily("gitlab_job_duration_seconds",
-                                      "GitLab job duration in seconds",
+                    GaugeMetricFamily("gitlab_job_latest_duration_seconds",
+                                      "latest GitLab job duration in seconds",
                                       labels=["project", "scope"]),
-                "startingDuration":
-                    GaugeMetricFamily("gitlab_job_starting_duration_seconds",
-                                      "GitLab job starting duration in seconds",
+                "created_timestamp":
+                    GaugeMetricFamily("gitlab_job_latest_created_timestamp_seconds",
+                                      "latest GitLab job created timestamp in unixtime",
                                       labels=["project", "scope"]),
-                "totalDuration":
-                    GaugeMetricFamily("gitlab_job_total_duration_seconds",
-                                      "GitLab job total duration in seconds",
+                "finished_timestamp":
+                    GaugeMetricFamily("gitlab_job_latest_finished_timestamp_seconds",
+                                      "latest GitLab job finished timestamp in unixtime",
                                       labels=["project", "scope"]),
-                "timestamp":
-                    GaugeMetricFamily("gitlab_job_timestamp_seconds",
-                                      "GitLab job finish timestamp in unixtime",
+                "started_timestamp":
+                    GaugeMetricFamily("gitlab_job_latest_started_timestamp_seconds",
+                                      "latest GitLab job started timestamp in unixtime",
                                       labels=["project", "scope"]),
             }
 
@@ -82,22 +82,16 @@ class GitLabJobsCollector:
 
     def _add_to_prometheus_metrics(self, scope, data):
         """add compute data and scope for prometheus_metrics"""
+
+        try: created = parse(data.get("created_at")).timestamp()
+        except TypeError: created = 0
+        try: finished = parse(data.get("finished_at")).timestamp()
+        except TypeError: finished = 0
+        try: started = parse(data.get("started_at")).timestamp()
+        except TypeError: started = 0
+
         self._prometheus_metrics[scope]["id"].add_metric([self._project, scope], data.get("id", 0))
         self._prometheus_metrics[scope]["duration"].add_metric([self._project, scope], data.get("duration", 0))
-
-        try:
-            created = parse(data.get("created_at")).timestamp()
-            started = parse(data.get("started_at")).timestamp()
-            finished = parse(data.get("finished_at")).timestamp()
-
-            # TODO what if started or finished is 0
-            # shouldn't happen for scopes ["failed", "success"]
-            starting = started - created
-            total = finished - created
-        except TypeError:
-            finished = 0
-            starting = 0
-            total = 0
-        self._prometheus_metrics[scope]["timestamp"].add_metric([self._project, scope], finished)
-        self._prometheus_metrics[scope]["startingDuration"].add_metric([self._project, scope], starting)
-        self._prometheus_metrics[scope]["totalDuration"].add_metric([self._project, scope], total)
+        self._prometheus_metrics[scope]["created_timestamp"].add_metric([self._project, scope], created)
+        self._prometheus_metrics[scope]["finished_timestamp"].add_metric([self._project, scope], finished)
+        self._prometheus_metrics[scope]["started_timestamp"].add_metric([self._project, scope], started)

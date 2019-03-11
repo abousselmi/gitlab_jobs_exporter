@@ -6,7 +6,7 @@ def readme():
         return f.read()
 
 setup(
-    version='0.1.0',
+    version='0.2.0',
     name='gitlab-jobs-exporter',
     description = "prometheus exporter for exporting job metrics in a project",
     long_description = readme(),
